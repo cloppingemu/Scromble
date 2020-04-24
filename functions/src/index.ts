@@ -282,7 +282,7 @@ export const setGameStarted = functions.https.onCall((data:setGameStarted_desc) 
 const floodFillColUp = function(cell:any, board:any):any{
   if (board[cell] === " " || cell < 0){
     return [];
-  } else if (Math.floor(cell/15) == 0){
+  } else if (Math.floor(cell/15) === 0){
     return [cell];
   } else{
     return [cell, ...floodFillColUp(cell-15, board)];
@@ -291,7 +291,7 @@ const floodFillColUp = function(cell:any, board:any):any{
 const floodFillColDown = function(cell:any, board:any):any{
   if (board[cell] === " " || cell > 224){
     return [];
-  } else if (Math.floor(cell/15) == 14){
+  } else if (Math.floor(cell/15) === 14){
     return [cell];
   } else{
     return [cell, ...floodFillColDown(cell+15, board)];
@@ -307,7 +307,7 @@ const floodFillCol = ((cell:any, board:any):any => {
 const floodFillRowLeft = function(cell:any, board:any):any{
   if (board[cell] === " " || cell < 0){
     return [];
-  } else if (cell%15 == 0){
+  } else if (cell%15 === 0){
     return [cell];
   } else{
     return [cell, ...floodFillRowLeft(cell-1, board)];
@@ -345,7 +345,7 @@ const validateWords = ((tiles:tiles_desc, board:string) => {
 });
 const validateSurrounding = ((tiles:tiles_desc, board:string) => {
   const location = Object.keys(tiles).map(v => {return parseInt(v);});
-  if (!location.map((v:any) => {return board[v] == " "}).every(Boolean)){
+  if (!location.map((v:any) => {return board[v] === " "}).every(Boolean)){
     return false;
   }
   let surrounding_tiles = [];
@@ -356,14 +356,14 @@ const validateSurrounding = ((tiles:tiles_desc, board:string) => {
     if (location[index] + 15 <= 224){
       surrounding_tiles.push(location[index]+15);
     }
-    if ((location[index]+1)%15 != 0){
+    if ((location[index]+1)%15 !== 0){
       surrounding_tiles.push(location[index]+1);
     }
-    if ((location[index]-1)%15 != 14){
+    if ((location[index]-1)%15 !== 14){
       surrounding_tiles.push(location[index]-1);
     }
   }
-  return surrounding_tiles.map((v:number) => {return board[v] != " "}).some(Boolean);
+  return surrounding_tiles.map((v:number) => {return board[v] !== " "}).some(Boolean);
 });
 const allEqual = ((arr:number[]) => {
   return arr.every((v:any) => {return v === arr[0];});
@@ -405,7 +405,7 @@ const getNewScore = ((tiles:tiles_desc, board:string) => {
   const location = Object.keys(tiles).map(v => {return parseInt(v);});
   const rows = location.map(v => {return Math.floor(v/15);});
   const cols = location.map(v => {return v%15;});
-  let new_score = (location.length == 7 ? 50 : 0);
+  let new_score = (location.length === 7 ? 50 : 0);
   if (allEqual(rows)){  // horizontal tiles
     const base_word = floodFillRow(location[0], board);
     new_score = new_score + (base_word.length > 1 ? base_word.map((v:any) => {return letter_info[board[v]].points * (location.includes(v) ? bonusLayout[v][0] : 1);}).reduce((a:any, b:any) => {return a+b;}) * location.map((v:any) => {return bonusLayout[v][1];}).reduce((a:any, b:any) => {return a*b}) : 0);

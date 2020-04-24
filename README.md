@@ -5,12 +5,12 @@ Online multi-player VueJS and firebase scrabble. Available at [scromble.web.app]
 ## Project setup
 ```
 yarn install
+```
 
 Add service key at *functions/src/keys.ts*. Also add property *project_owner_email* to the exported object.
 
 Add Firebase SDK object and initalize and export database, functions and auth in *src/firebaseInit.js*.
 
-```
 
 ### Compiles and hot-reloads for development
 ```

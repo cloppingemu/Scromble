@@ -22,10 +22,10 @@
 
     <v-progress-linear :active="getting_board" color="info" indeterminate></v-progress-linear>
 
-    <v-card-actions class="justify-center" v-if="!getting_board">
-      <v-btn :width="env.user.photoURL ? '49%' : null" :block="!env.user.photoURL" @click="attemptSubmit(false)">Join</v-btn>
-      <v-btn :width="env.user.photoURL ? '49%' : null" v-if="env.user.photoURL" @click="attemptSubmit(true)">Create</v-btn>
-    </v-card-actions>
+    <v-card-text class="justify-center" v-if="!getting_board">
+      <v-btn block @click="attemptSubmit(false)">Join</v-btn>
+      <v-btn block @click="attemptSubmit(true)" :disabled="!env.user.photoURL" class="mt-2">{{ env.user.photoURL ? "start new game" : "sign in for new game" }}</v-btn>
+    </v-card-text>
     <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.5.2/firebaseui.css" />
     <div v-if="!getting_board" id="firebaseui-auth-container"> </div>
 
