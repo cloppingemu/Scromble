@@ -8,6 +8,10 @@ admin.initializeApp({
 });
 const db = admin.database();
 
+const getTimeStamp = (() => {
+  return Date.now();
+  // return `${new Date().toLocaleString("en-AU", {timeZone: "Australia/Sydney"})} AEST`;
+});
 export const registerUser = functions.auth.user().onCreate((user: any) => {
   db.ref(`/users/${user.uid}`).set({
     admin: false,
@@ -110,63 +114,53 @@ interface ScoreDesc {
 };
 export const makeNewGame = functions.https.onCall((data:string[], context:any) => {
   return new Promise((resolve, reject) => {
-    if (context.auth){
-      db.ref("/games").once("value").then((snapshot:any) => {
-        const games = snapshot.val();
-        let bag = Array.from(Object.keys(letter_info).map((val:string) => {
-          const arr : string[] = Array(letter_info[val].count);
-          return arr.fill(val).join("");
-        }).join("")).sort((a,b) => {
-          return (Math.random()>0.5 ? 1 : -1);
-        }).join("");
-        const letters = bag.substring(0, 7);
-        bag = bag.substring(7);
-        let players : PlayerDesc = {}
-        players[data[1]] = {
-          joined: 0,
-          key: data[2],
-          letters: letters
-        };
-        let score :  ScoreDesc = {}
-        score[data[1]] = 0;
-        let game = {
-          bag: bag,
-          creator: context.auth.token.email,
-          players: players,
-          state: {
-            board: Array(225).fill(" ").join(""),
-            points: Array(225).fill(" ").join(""),
-            lastMod: `${new Date().toLocaleString("en-AU", {timeZone: "Australia/Sydney"})} AEST`,
-            over: false,
-            player: data[1],
-            started: false,
-            turn: 0,
-            score: score
-          }
-        };
-        const staleGames = Object.keys(games).filter((name) => {return games[name].creator === context.auth.token.email});
-        let pArr = [db.ref(`/games/${data[0]}`).set(game)];
-        if (!Object.keys(games).includes(data[0])){
-          if (staleGames.length > 0){
-            for (let n in staleGames){
-              pArr.push(db.ref(`/games/${staleGames[n]}`).set(null));
-            }
-          }
+    db.ref("/").once("value").then((snapshot:any) => {
+      const root = snapshot.val();
+      if (root.config.instances <= Object.keys(root.games).length){
+        root.games[Object.keys(root.games).sort((a,b) => {return root.games[a].state.lastMod - root.games[b].state.lastMod})[0]] = null;
+      }
+      let bag = Array.from(Object.keys(letter_info).map((val:string) => {
+        const arr : string[] = Array(letter_info[val].count);
+        return arr.fill(val).join("");
+      }).join("")).sort((a,b) => {
+        return (Math.random()>0.5 ? 1 : -1);
+      }).join("");
+      const letters = bag.substring(0, 7);
+      bag = bag.substring(7);
+      let player : PlayerDesc = {}
+      player[data[1]] = {
+        joined: 0,
+        key: data[2],
+        letters: letters
+      };
+      let score : ScoreDesc = {}
+      score[data[1]] = 0;
+      let game = {
+        creator: (context.auth ? context.auth.token.email : ""),
+        bag: bag,
+        players: player,
+        state: {
+          board: Array(225).fill(" ").join(""),
+          points: Array(225).fill(" ").join(""),
+          lastMod: getTimeStamp(),
+          over: false,
+          player: data[1],
+          started: false,
+          turn: 0,
+          score: score
         }
-        Promise.all(pArr).then(() => {
-          resolve(["success", letters, game.state]);
-        }).catch(() => {
-          resolve(["reject", "Internal write error"])
-        });
+      };
+      root.games[data[0]] = game;
+      db.ref(`/`).set(root).then(() => {
+        resolve(["success", letters, game.state]);
       }).catch(() => {
-        resolve(["failure", "Internal read error"]);
+        resolve(["reject", "Internal write error"])
       });
-    } else{
-      resolve(["failure", "Sign in to create game"]);
-    }
+    }).catch((err:any) => {
+      resolve(["failure", `Internal read error. ${err}, ${context}`]);
+    });
   });
 });
-
 
 export const getGame = functions.https.onCall((data:any, context:any) => {
   return new Promise((resolve, reject) => {
@@ -193,7 +187,7 @@ export const getGame = functions.https.onCall((data:any, context:any) => {
             joined: Object.keys(game.players).length
           };
           game.state.score[data[1]] = score;
-          game.state.lastMod = `${new Date().toLocaleString("en-AU", {timeZone: "Australia/Sydney"})} AEST`;
+          game.state.lastMod = getTimeStamp();
           db.ref(`/games/${data[0]}/`).set(game).then(() => {
             resolve(["success", letters, game.state]);
           });
@@ -337,7 +331,7 @@ const validateWords = ((tiles:tiles_desc, board:string) => {
   for (let index in location){
     let row_word = floodFillRow(location[index], board).map((v:any) => {return board[v];}).join("");
     let col_word = floodFillCol(location[index], board).map((v:any) => {return board[v];}).join("");
-    if ((!wordlist.includes(row_word)) || (!wordlist.includes(col_word))){
+    if ((!wordlist.includes(row_word) && row_word.length > 1) || (!wordlist.includes(col_word)) && col_word.length > 1){
       return false;
     }
   }
@@ -345,25 +339,11 @@ const validateWords = ((tiles:tiles_desc, board:string) => {
 });
 const validateSurrounding = ((tiles:tiles_desc, board:string) => {
   const location = Object.keys(tiles).map(v => {return parseInt(v);});
-  if (!location.map((v:any) => {return board[v] === " "}).every(Boolean)){
-    return false;
-  }
-  let surrounding_tiles = [];
-  for (let index in location){
-    if (location[index] - 15 >= 0){
-      surrounding_tiles.push(location[index]-15);
-    }
-    if (location[index] + 15 <= 224){
-      surrounding_tiles.push(location[index]+15);
-    }
-    if ((location[index]+1)%15 !== 0){
-      surrounding_tiles.push(location[index]+1);
-    }
-    if ((location[index]-1)%15 !== 14){
-      surrounding_tiles.push(location[index]-1);
-    }
-  }
-  return surrounding_tiles.map((v:number) => {return board[v] !== " "}).some(Boolean);
+  const col_word = floodFillCol(location[0], board);
+  const row_word = floodFillRow(location[0], board);
+  const base_row = location.filter((v:any) => {return row_word.includes(v);}).length === location.length;
+  const base_col = location.filter((v:any) => {return col_word.includes(v);}).length === location.length;
+  return base_row || base_col;
 });
 const allEqual = ((arr:number[]) => {
   return arr.every((v:any) => {return v === arr[0];});
@@ -454,15 +434,13 @@ export const submitTiles = functions.https.onCall((data:submitTiles_desc) => {
             if (data[0][1] === game.state.player){  // check player turn
               if (game.players[data[0][1]].key === data[0][2]){  // check player key
                 const changed_letter_index = getUniqueIndex(game.players[data[0][1]].letters, Object.values(tiles));
-                if (changed_letter_index !== -1){
-                  // console.log(`Identified letters, ${game.players[data[0][1]].letters}, (${Object.values(tiles)}), [${changed_letter_index}]`)
-                  const validate_surrounding = validateSurrounding(tiles, game.state.board);
-                  if (validate_surrounding || game.state.board.trim().length === 0){
-                    game.state.board = Array.from(game.state.board);
-                    for (let board_index in tiles){
-                      game.state.board[board_index] = tiles[board_index][1 % tiles[board_index].length];
-                    }
-                    const new_board = game.state.board.join("")
+                if (changed_letter_index !== -1){  // check if valid letters were played
+                  game.state.board = Array.from(game.state.board);
+                  for (let board_index in tiles){
+                    game.state.board[board_index] = tiles[board_index][1 % tiles[board_index].length];
+                  }
+                  const new_board = game.state.board.join("")
+                  if (validateSurrounding(tiles, new_board) || game.state.board.join("").trim().length === 0){
                     if (validateWords(tiles, new_board)){
                       game.state.board = new_board;
                       game.state.points = Array.from(game.state.points);
@@ -472,7 +450,7 @@ export const submitTiles = functions.https.onCall((data:submitTiles_desc) => {
                       game.state.points = game.state.points.join("");
                       game.state.turn = game.state.turn + 1;
                       game.state.started = (game.state.turn >= Object.keys(game.players).length);
-                      game.state.lastMod = `${new Date().toLocaleString("en-AU", {timeZone: "Australia/Sydney"})} AEST`;
+                      game.state.lastMod = getTimeStamp();
                       for (let player in game.players){
                         if ((game.state.turn % Object.keys(game.players).length) === game.players[player].joined){
                           game.state.player = player;
@@ -482,7 +460,6 @@ export const submitTiles = functions.https.onCall((data:submitTiles_desc) => {
                       if (Object.keys(tiles).length > game.bag.length){
                         new_letters = `${game.bag}${Array(Object.keys(tiles).length-game.bag.length).fill("*").join("")}`;
                         game.bag = "";
-                        console.log(new_letters);
                       } else{
                         new_letters = game.bag.substring(0, Object.keys(tiles).length);
                         game.bag = game.bag.substring(Object.keys(tiles).length);
@@ -547,11 +524,10 @@ export const replaceTiles = functions.https.onCall((data:replaceTiles_desc) => {
               if (game.players[data[0][1]].key === data[0][2]){  // check player key
                 const changed_letter_index = getUniqueIndex(game.players[data[0][1]].letters, Object.values(tiles));
                 if (changed_letter_index !== -1){
-                  // console.log(`Identified letters, ${game.players[data[0][1]].letters}, (${Object.values(tiles)}), [${changed_letter_index}]`);
                   game.state.turn = game.state.turn + 1;
                   // game.state.over = false;
                   game.state.started = (game.state.turn >= Object.keys(game.players).length);
-                  game.state.lastMod = `${new Date().toLocaleString("en-AU", {timeZone: "Australia/Sydney"})} AEST`;
+                  game.state.lastMod = getTimeStamp();
                   for (let player in game.players){
                     if ((game.state.turn % Object.keys(game.players).length) === game.players[player].joined){
                       game.state.player = player;
@@ -585,7 +561,7 @@ export const replaceTiles = functions.https.onCall((data:replaceTiles_desc) => {
           resolve(["failure", `Bag only contains ${game.dag.length} tiles`]);
         }
       }).catch(() => {
-        resolve(["failure", "Internal read error"]);
+        resolve(["failure", `Internal read error`]);
       });
     } else{
       resolve(["failure", "Malformed request"]);

@@ -149,12 +149,11 @@ export default {
           this.env.game.self.letters = Array.from(response.data[1]);
         } else{
           this.error_msg = response.data[1];
-          bus.$emit("setGamebarPlayWarning", response.data[1]);
         }
       }).then(() => {
         bus.$emit("setCurrentlySendingLetters", false);
       }).catch(() => {
-        bus.$emit("setGamebarPlayWarning", "Network error.");
+        this.error_msg = "Network error";
         bus.$emit("setCurrentlySendingLetters", false);
       });
     });
@@ -165,14 +164,12 @@ export default {
       ];
       setGameStarted(payload).then((response) => {
         if (response.data[0] !== "success"){
-          bus.$emit("setGamebarPlayWarning", response.data[1]);
-        } else{
           this.error_msg = response.data[1];
         }
       }).then(() => {
         bus.$emit("setStartSwitchActive", true);
       }).catch(() => {
-        bus.$emit("setGamebarPlayWarning", "Network error.")
+        this.error_msg = "Network error";
       }).then(() => {
         bus.$emit("setStartSwitchActive", true);
       });

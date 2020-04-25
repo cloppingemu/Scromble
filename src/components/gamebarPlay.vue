@@ -138,9 +138,6 @@ export default {
     bus.$on("setCurrentlySendingLetters", (value) => {
       this.currentlySendingLetters = value;
     });
-    bus.$on("setGamebarPlayWarning", (warning) => {
-      this.warning = warning;
-    });
     bus.$on("setStartSwitchActive", (value) => {
       this.startSwitchActive = value
     });
