@@ -7,8 +7,9 @@
       @change="emit_playground_index($event)"
     >
       <v-btn
-        text v-for="j in 15" :class="env.game.self.name == env.game.state.player ? boardColors[(i-1)*15+j-1][0] : boardColors[(i-1)*15+j-1][2]" :key="j" :value="(i-1)*15+j-1"
-        style="padding:0 6px;" :disabled="env.game.state.board_disabled[(i-1)*15+j-1] || env.game.self.name != env.game.state.player"
+        v-for="j in 15" :key="j" :value="(i-1)*15+j-1"
+        :class="get_button_class((i-1)*15+j-1)" text style="padding:0 6px;"
+        :disabled="env.game.state.board_disabled[(i-1)*15+j-1] || env.game.self.name != env.game.state.player || currently_replacing_tiles == 0"
       >
         <span
           :class="((env.game.state.board[(i-1)*15+j-1] !== ' ') && env.game.state.board[(i-1)*15+j-1] ? 'font-weight-black title' : 'font-weight-medium grey--text text--darken-2 caption') + (env.game.state.board_disabled[(i-1)*15+j-1] ? ' grey--text text--darken-2' : '')"
@@ -40,12 +41,17 @@ export default {
       queries: "hello world",
       board_index: null,
       boardColors: Array(225).fill(Array(2)),
+      update_color: "yellow lighten-4",
+      currently_replacing_tiles: null
     };
   },
 
   created: function(){
     bus.$on("clear:playground_select", () => {
       this.board_index = null;
+    });
+    bus.$on("setCurrentlyReplacingTiles", (value) => {
+      this.currently_replacing_tiles = value;
     });
   },
 
@@ -78,6 +84,15 @@ export default {
   methods: {
     emit_playground_index: function(event){
       bus.$emit('set:playground_index', event);
+    },
+    get_button_class: function(index){
+      if (this.env.game.state.lastUpdated[index]) {
+        return this.update_color;
+      } else if (this.env.game.self.name != this.env.game.state.player){
+        return this.boardColors[index][2];
+      } else{
+        return this.boardColors[index][0];
+      }
     }
   }
 }
@@ -87,5 +102,8 @@ export default {
 u {
   text-decoration: none;
   border-bottom: 3px solid;
+}
+button {
+  transition: background-color 0.25s ease;
 }
 </style>

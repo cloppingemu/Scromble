@@ -25,7 +25,7 @@
     <v-tooltip bottom>
       <template v-slot:activator="{ on }">
         <v-btn text fab outlined class="mx-5" :loading="currentlySendingLetters"
-          :disabled="!disabled_letters.some(Boolean) || env.game.self.name != env.game.state.player || currentlySendingLetters"
+          :disabled="(!disabled_letters.some(Boolean) && surrender_option != 0) || env.game.self.name != env.game.state.player || currentlySendingLetters"
           @click="sendLetters()" v-on="on">
           <v-icon>
             mdi-send
@@ -37,14 +37,10 @@
   </v-card-actions>
   <v-layout justify-center>
     <v-card-actions>
-      <v-btn-toggle tile active-class="accent" v-model="surrender_option" @change="selectSurrenderTile">
-        <v-btn :class="'font-weight-black' + (surrender_option==1 ? ' warning' : '')" text
+      <v-btn-toggle tile active-class="warning" v-model="surrender_option" @change="replacing_letters($event)" >
+        <v-btn class="font-weight-black" text
           :disabled="this.env.game.self.name != this.env.game.state.player || currentlySendingLetters || !disabled_letters.every(v => !Boolean(v)) || Object.values(env.game.self.letters).includes('*')" >
-          {{ surrender_option==1 ? "Confirm" : "Replace Tiles" }}
-        </v-btn>
-        <v-btn :class="'font-weight-black' + (surrender_option==0 ? ' warning' : '')" text
-          :disabled="this.env.game.self.name != this.env.game.state.player || currentlySendingLetters || (surrender_option==0 && (this.active_letter === null || !Boolean(this.active_letter.length)))" >
-          {{ surrender_option==0 ? "Confirm" : "Surrender Game" }}
+          Replace Tiles
         </v-btn>
       </v-btn-toggle>
     </v-card-actions>
@@ -104,13 +100,11 @@ export default {
   data: function(){
     return {
       action_index: 0,
-      surrender_index: 0,
       disabled_letters: Array(7).fill(false),
       active_letter: null,
       focus_letters: Array(2),
       startSwitchActive: true,
       surrender_option: null,
-      last_surrender_option: Array(2),
       currentlySendingLetters: false,
       blank_tile_overlay: false,
       warning_overlay: ""
@@ -135,8 +129,12 @@ export default {
         this.currentlySendingLetters = false;
       }
     });
-    bus.$on("setCurrentlySendingLetters", (value) => {
-      this.currentlySendingLetters = value;
+    bus.$on("RecievedReplacementTiles", (value) => {
+      this.currentlySendingLetters = value.value;
+      if (value.success){
+        this.surrender_option = null;
+        this.active_letter = null;
+      }
     });
     bus.$on("setStartSwitchActive", (value) => {
       this.startSwitchActive = value
@@ -170,6 +168,11 @@ export default {
   },
 
   methods: {
+    replacing_letters: function(event){
+      console.log(event)
+      this.active_letter = null;
+      bus.$emit("setCurrentlyReplacingTiles", event);
+    },
     clear_error_msg: function(){
       bus.$emit("clearErrMsg");
     },
@@ -199,24 +202,13 @@ export default {
       this.startSwitchActive = false;
       bus.$emit("setGameStartedValue", !this.env.game.state.started);
     },
-    selectSurrenderTile: function(){
-      this.last_surrender_option[this.surrender_index%2] = this.surrender_option;
-      this.surrender_index = this.surrender_index + 1;
-      const changes = [this.last_surrender_option[this.surrender_index%2],
-                       this.last_surrender_option[(this.surrender_index-1)%2]];
-      if (changes[0] == 0 && changes[1] == 1){
-        this.currentlySendingLetters = true;
-        bus.$emit("replaceLetters", this.active_letter.map(v => this.env.game.self.letters[v]).join(""));
-        this.surrender_option = null;
-        this.last_surrender_option = Array(2);
-        this.surrender_index = 0;
-      }
-      this.focus_letters = Array(2);
-      this.active_letter = null;
-    },
     sendLetters: function(){
       this.currentlySendingLetters = true;
-      bus.$emit("sendLetters");
+      if (this.surrender_option == 0){
+        bus.$emit("replaceLetters", this.active_letter.map(v => this.env.game.self.letters[v]).join(""));
+      } else{
+        bus.$emit("sendLetters");
+      }
     },
     click_on_confirm: function(){
       document.getElementById("confirm_wildcard").click();

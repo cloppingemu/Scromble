@@ -151,10 +151,10 @@ export default {
           this.error_msg = response.data[1];
         }
       }).then(() => {
-        bus.$emit("setCurrentlySendingLetters", false);
+        bus.$emit("RecievedReplacementTiles", {success: true, value: false});
       }).catch(() => {
         this.error_msg = "Network error";
-        bus.$emit("setCurrentlySendingLetters", false);
+        bus.$emit("RecievedReplacementTiles", {success: false, value: false});
       });
     });
     bus.$on("setGameStartedValue", (value) => {
@@ -179,8 +179,8 @@ export default {
       db.ref(`/games/${boardName}/state`).on("value", (snap) => {
         const payload = snap.val();
         payload.board_disabled = Array.from(snap.val().board).map(x => x !== " ");
-        console.log(payload.board_disabled);
-        payload.lastUpdated = Object.keys(Array(225).fill()).map((v) => payload.board[v] != this.env.game.state.board[v]);
+        payload.lastUpdated = Object.keys(Array(225).fill()).map((v) => payload.board[v] != this.env.game.state.board[v] && payload.board[v] != " ");
+        setTimeout(() => {this.env.game.state.lastUpdated = Array(225).fill(false);}, 7500)
         this.env.game.state = payload;
       });
     });
