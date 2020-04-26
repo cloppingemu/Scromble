@@ -1,13 +1,12 @@
 <template>
-<v-app-bar hide-on-scroll app color="primary" dark class="link">
-  <div class="d-flex align-center" @click="go_to_link('/')">
+<v-app-bar hide-on-scroll app color="primary" dark>
+  <div class="d-flex align-center link" @click="go_to_link('/')">
     <v-icon class="shrink mr-1" x-large transition="scale-transition">mdi-border-all</v-icon>
     <h1 class="shrink mt-1 hidden-xs-only">Scromble</h1>
   </div>
 
   <v-spacer>
-    <a id="navigator" style="display:none">
-    </a>
+    <a id="navigator"></a>
   </v-spacer>
 
   <v-speed-dial v-if="env.user.photoURL" v-model="authFab" direction="bottom" transition="scale">
