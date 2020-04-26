@@ -179,6 +179,8 @@ export default {
       db.ref(`/games/${boardName}/state`).on("value", (snap) => {
         const payload = snap.val();
         payload.board_disabled = Array.from(snap.val().board).map(x => x !== " ");
+        console.log(payload.board_disabled);
+        payload.lastUpdated = Object.keys(Array(225).fill()).map((v) => payload.board[v] != this.env.game.state.board[v]);
         this.env.game.state = payload;
       });
     });

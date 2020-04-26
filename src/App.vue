@@ -32,6 +32,7 @@ export default {
             board_disabled: Array(225).fill(false),
             board: Array(225),
             points: Array(225),
+            lastUpdated: Array(225).fill(false),
             started: false,
             over: false,
             player: "",
@@ -75,6 +76,7 @@ export default {
 
           let state_payload = response.data[2];
           state_payload.board_disabled = Array.from(response.data[2].board).map(x => x !== " ");
+          state_payload.lastUpdated = Array(225).fill(false);
           this.env.game.state = state_payload;
 
           if (loginInfo.fromLogin){

@@ -24,7 +24,7 @@
 
     <v-card-actions class="justify-center" v-if="!getting_board">
       <v-btn width="49%" @click="attemptSubmit(false)">Join</v-btn>
-      <v-btn width="49%" @click="attemptSubmit(true)">Start new game</v-btn>
+      <v-btn width="49%" @click="attemptSubmit(true)">Start new</v-btn>
     </v-card-actions  >
     <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.5.2/firebaseui.css" />
     <div v-if="!getting_board" id="firebaseui-auth-container"> </div>
@@ -48,7 +48,9 @@ export default {
       this.newGameOverlay = true;
     });
     bus.$on("validatedUser", (staleGameName) => {
-      this.gameName = staleGameName;
+      if (this.gameName === ""){
+        this.gameName = staleGameName;
+      }
     });
   },
 

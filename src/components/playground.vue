@@ -7,7 +7,7 @@
       @change="emit_playground_index($event)"
     >
       <v-btn
-        text v-for="j in 15" :class="boardColors[(i-1)*15+j-1][0]" :key="j" :value="(i-1)*15+j-1"
+        text v-for="j in 15" :class="env.game.self.name == env.game.state.player ? boardColors[(i-1)*15+j-1][0] : boardColors[(i-1)*15+j-1][2]" :key="j" :value="(i-1)*15+j-1"
         style="padding:0 6px;" :disabled="env.game.state.board_disabled[(i-1)*15+j-1] || env.game.self.name != env.game.state.player"
       >
         <span
@@ -40,7 +40,6 @@ export default {
       queries: "hello world",
       board_index: null,
       boardColors: Array(225).fill(Array(2)),
-      bus: bus
     };
   },
 
@@ -52,10 +51,10 @@ export default {
 
   mounted: function(){
     this.queries = this.$route.query;
-    const w3 = ["red lighten-2", "3⨉W"];
-    const w2 = ["red lighten-4", "2⨉W"];
-    const l3 = ["teal lighten-2", "3⨉L"];
-    const l2 = ["teal lighten-4", "2⨉L"];
+    const w3 = ["red lighten-2", "3⨉W", "red lighten-3"];
+    const w2 = ["red lighten-4", "2⨉W", "red lighten-5"];
+    const l3 = ["teal lighten-2", "3⨉L", "teal lighten-3"];
+    const l2 = ["teal lighten-4", "2⨉L", "teal lighten-5"];
     const x1 = ["", ""];
     this.boardColors = [
       w3,x1,x1,l2,x1,x1,x1,w3,x1,x1,x1,l2,x1,x1,w3,
