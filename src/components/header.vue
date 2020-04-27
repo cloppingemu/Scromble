@@ -68,6 +68,7 @@ export default {
 
   methods: {
     firebase_deauth: function(){
+      this.fab_loading = true
       bus.$emit("firebaseDeAuth");
     },
     new_game: function(){

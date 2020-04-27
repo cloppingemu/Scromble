@@ -34,7 +34,9 @@
 </template>
 
 <script>
-import {bus} from "@/main.js"
+import {bus} from "@/main.js";
+import {auth} from "@/firebaseInit";
+import {ui} from "@/firebaseInit";
 
 export default {
   name: 'Login',
@@ -56,6 +58,14 @@ export default {
 
   mounted: function(){
     this.$refs.gameName.focus();
+    auth.onAuthStateChanged((user) => {
+      if (!user){
+        ui.start("#firebaseui-auth-container", {
+          signInOptions: ['google.com'],
+          signInSuccessUrl: "."
+        });
+      }
+    });
   },
 
   data: function(){

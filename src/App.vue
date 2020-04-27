@@ -7,7 +7,6 @@
 <script>
 import {functions} from "@/firebaseInit";
 import {auth} from "@/firebaseInit";
-import {ui} from "@/firebaseInit";
 
 import {bus} from "@/main";
 
@@ -105,11 +104,6 @@ export default {
           if (res.data[0]){
             bus.$emit("validatedUser", res.data[0]);
           }
-        });
-      } else{
-        ui.start("#firebaseui-auth-container", {
-          signInOptions: ['google.com'],
-          signInSuccessUrl: "."
         });
       }
     });

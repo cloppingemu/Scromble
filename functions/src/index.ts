@@ -15,9 +15,7 @@ const getTimeStamp = (() => {
 export const registerUser = functions.auth.user().onCreate((user: any) => {
   db.ref(`/users/${user.uid}`).set({
     admin: false,
-    displayName: user.displayName,
     email: user.email,
-    photoURL: user.photoURL,
   }).then(() => {
     return;
   }).catch((err:any) => {
@@ -83,8 +81,6 @@ const bonusLayout = [
   x1,w2,x1,x1,x1,l3,x1,x1,x1,l3,x1,x1,x1,w2,x1,
   w3,x1,x1,l2,x1,x1,x1,w3,x1,x1,x1,l2,x1,x1,w3
 ];
-
-
 interface LetterInfo {
   [index:string]: {
     points: number,
@@ -127,15 +123,15 @@ export const makeNewGame = functions.https.onCall((data:string[], context:any) =
       }).join("");
       const letters = bag.substring(0, 7);
       bag = bag.substring(7);
-      let player : PlayerDesc = {}
+      const player : PlayerDesc = {}
       player[data[1]] = {
         joined: 0,
         key: data[2],
         letters: letters
       };
-      let score : ScoreDesc = {}
+      const score : ScoreDesc = {}
       score[data[1]] = 0;
-      let game = {
+      const game = {
         creator: (context.auth ? context.auth.token.email : ""),
         bag: bag,
         players: player,
@@ -161,6 +157,7 @@ export const makeNewGame = functions.https.onCall((data:string[], context:any) =
     });
   });
 });
+
 
 export const getGame = functions.https.onCall((data:any, context:any) => {
   return new Promise((resolve, reject) => {
@@ -329,8 +326,8 @@ interface tiles_desc {
 const validateWords = ((tiles:tiles_desc, board:string) => {
   const location = Object.keys(tiles).map(v => {return parseInt(v);});
   for (let index in location){
-    let row_word = floodFillRow(location[index], board).map((v:any) => {return board[v];}).join("");
-    let col_word = floodFillCol(location[index], board).map((v:any) => {return board[v];}).join("");
+    const row_word = floodFillRow(location[index], board).map((v:any) => {return board[v];}).join("");
+    const col_word = floodFillCol(location[index], board).map((v:any) => {return board[v];}).join("");
     if ((!wordlist.includes(row_word) && row_word.length > 1) || (!wordlist.includes(col_word)) && col_word.length > 1){
       return false;
     }
@@ -358,7 +355,7 @@ const validateTiles = ((tiles:tiles_desc) => {
 });
 const getUniqueIndex = ((baseStr:string, luStr:string[]) => {
   const bArr = Array.from(baseStr);
-  let out = [];
+  const out = [];
   for (let el in luStr){
     const elIndex = bArr.indexOf(luStr[el][0]);
 	  if (elIndex === -1 || luStr[el][0] === "*"){
@@ -371,7 +368,7 @@ const getUniqueIndex = ((baseStr:string, luStr:string[]) => {
   return out;
 });
 function replaceLetters(baseStr:any, indices:any, values:any){
-  let bArr = Array.from(baseStr);
+  const bArr = Array.from(baseStr);
 	for (let elIndex in indices){
 		bArr[indices[elIndex]] = values[elIndex];
 	}
@@ -429,7 +426,7 @@ export const submitTiles = functions.https.onCall((data:submitTiles_desc) => {
       if (tileWords){
         db.ref(`/games/${data[0][0]}`).once("value").then((snapshot:any) => {
           // console.log("recieved snapshot");
-          let game = snapshot.val();
+          const game = snapshot.val();
           if (Object.keys(game.players).includes(data[0][1])){  // check player exists in game
             if (data[0][1] === game.state.player){  // check player turn
               if (game.players[data[0][1]].key === data[0][2]){  // check player key
@@ -517,7 +514,7 @@ export const replaceTiles = functions.https.onCall((data:replaceTiles_desc) => {
       data[0][1].length !== 0 && data[0][2].length !== 0 && data[1].length !== 0){
       const tiles = data[1];
       db.ref(`/games/${data[0][0]}`).once("value").then((snapshot:any) => {
-        let game = snapshot.val();
+        const game = snapshot.val();
         if (game.bag.length >= data[1].length){  // ensure enough tiles are remaining
           if (Object.keys(game.players).includes(data[0][1])){  // check if player exists
             if (data[0][1] === game.state.player){  // ensure player's turn
