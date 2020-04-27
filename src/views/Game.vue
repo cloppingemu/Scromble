@@ -118,7 +118,6 @@ export default {
       }
     });
     bus.$on("dispatchLetters", (payload) => {
-      // console.log({payload});
       submitTiles(payload).then((response) => {
         if (response.data[0] == "success"){
           this.env.game.self.letters = Array.from(response.data[1]);
@@ -151,10 +150,11 @@ export default {
           this.error_msg = response.data[1];
         }
       }).then(() => {
-        bus.$emit("RecievedReplacementTiles", {success: true, value: false});
+        bus.$emit("recievedReplacementTiles", {success: true, value: false});
+        bus.$emit("setCurrentlyReplacingTiles", null);
       }).catch(() => {
         this.error_msg = "Network error";
-        bus.$emit("RecievedReplacementTiles", {success: false, value: false});
+        bus.$emit("recievedReplacementTiles", {success: false, value: false});
       });
     });
     bus.$on("setGameStartedValue", (value) => {

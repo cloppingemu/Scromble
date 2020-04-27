@@ -11,7 +11,7 @@
 
   <v-speed-dial v-if="env.user.photoURL" v-model="authFab" direction="bottom" transition="scale">
     <template v-slot:activator>
-        <v-btn fab small light>
+        <v-btn fab small light :loading="fab_loading">
           <v-avatar size=42 v-if="!authFab">
             <img :src="env.user.photoURL" :alt="env.user.displayName.substring(0,1).toUpperCase()" />
           </v-avatar>
@@ -29,7 +29,7 @@
     </v-tooltip>
     <v-tooltip left>
       <template v-slot:activator="{ on }">
-        <v-btn fab dark small color="red" v-on="on">
+        <v-btn fab dark small color="red" v-on="on" @click="delete_self()">
           <v-icon>mdi-account-remove</v-icon>
         </v-btn>
       </template>
@@ -41,7 +41,10 @@
 </template>
 
 <script>
-import {bus} from "../main.js"
+import {bus} from "../main.js";
+import {functions} from "@/firebaseInit";
+
+const deregisterUser = functions.httpsCallable("deregisterUser");
 
 export default {
   name: 'TopBar',
@@ -53,10 +56,7 @@ export default {
   data: function(){
     return {
       authFab: false,
-      backEnv: {
-        selfUID: false,
-        db: {}
-      }
+      fab_loading: false
     };
   },
 
@@ -75,9 +75,18 @@ export default {
     },
     go_to_link: function(location){
       const navLink = document.getElementById("navigator");
-      console.log(location);
       navLink.setAttribute("href", location);
       navLink.click();
+    },
+    delete_self: function(){
+      this.fab_loading = true
+      deregisterUser({targetUid: this.env.user.uid}).then((res) => {
+        if (res.data[0] == "success"){
+          this.firebase_deauth();
+        }
+      }).catch(() => {
+        this.fab_loading = false;
+      });
     }
   }
 };

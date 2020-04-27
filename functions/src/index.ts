@@ -214,18 +214,18 @@ export const deregisterUser = functions.https.onCall((data:any, context:any) => 
           const p_delUser = admin.auth().deleteUser(data.targetUid);
           const p_delUserInfo = db.ref(`/users/${data.targetUid}`).set(null);
           Promise.all([p_delUser, p_delUserInfo]).then(() => {
-            resolve("success");
+            resolve(["success"]);
           }).catch((err: any) => {
             console.log(`Error in deleting user ${snapshot.val()[data.targetUid].email} by ${context.auth.email}: ${err}`);
-            resolve("!! Failed to delete user");
+            resolve(["failure", "Failed to delete user or profile"]);
           });
         } else{
           console.log(`Failed attempt to delete ${snapshot.val()[data.targetUid].email} by ${context.auth.email}.`);
-          resolve("!! Inadequate permissions");
+          resolve(["failure", "Inadequate permissions"]);
         }
       }
     }).catch(() => {
-      resolve("!! Internal error");
+      resolve("!! Internal read error");
     });
   });
 });

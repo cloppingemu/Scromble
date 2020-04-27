@@ -129,7 +129,7 @@ export default {
         this.currentlySendingLetters = false;
       }
     });
-    bus.$on("RecievedReplacementTiles", (value) => {
+    bus.$on("recievedReplacementTiles", (value) => {
       this.currentlySendingLetters = value.value;
       if (value.success){
         this.surrender_option = null;
@@ -169,7 +169,6 @@ export default {
 
   methods: {
     replacing_letters: function(event){
-      console.log(event)
       this.active_letter = null;
       bus.$emit("setCurrentlyReplacingTiles", event);
     },

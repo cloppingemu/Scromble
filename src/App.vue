@@ -97,6 +97,7 @@ export default {
   mounted: function(){
     auth.onAuthStateChanged((user) => {
       if (user){
+        this.env.user.uid = user.uid;
         this.env.user.displayName = user.displayName;
         this.env.user.photoURL = user.photoURL;
         bus.$emit("showCreateAtLogin");
