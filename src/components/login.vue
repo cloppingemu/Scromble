@@ -8,7 +8,7 @@
     </v-card-title>
     <v-card-text>
       <v-form>
-        <v-text-field ref="gameName" v-model="gameName" label="Game Name" prepend-icon="mdi-border-all" @keydown.enter="attemptSubmit(false)" clearable />
+        <v-text-field ref="gameName" v-model="gameName" label="Board Name" prepend-icon="mdi-border-all" @keydown.enter="attemptSubmit(false)" clearable />
         <v-text-field ref="playerName" v-model="playerName" label="Player Name" prepend-icon="mdi-account" @keydown.enter="attemptSubmit(false)" clearable />
         <v-text-field ref="playerKey" v-model="playerKey" label="Secret Key" prepend-icon="mdi-account-key" @keydown.enter="attemptSubmit(false)" clearable />
       </v-form>
@@ -24,7 +24,7 @@
 
     <v-card-actions class="justify-center" v-if="!getting_board">
       <v-btn width="49%" @click="attemptSubmit(false)">Join</v-btn>
-      <v-btn width="49%" @click="attemptSubmit(true)">Start new</v-btn>
+      <v-btn width="49%" @click="attemptSubmit(true)">Start game</v-btn>
     </v-card-actions  >
     <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.5.2/firebaseui.css" />
     <div v-if="!getting_board" id="firebaseui-auth-container"> </div>

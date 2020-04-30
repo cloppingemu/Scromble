@@ -59,7 +59,7 @@ export default {
       const playerName = loginInfo.playerName.trim().toLowerCase();
       const playerKey = loginInfo.playerKey.trim().toLowerCase();
       // loginInfo.fromLogin: event triggered from Login?
-      // loginInfo.liveBind: live bind env.game.state
+      // loginInfo.newGame: start new game
 
       let startGame =  getGame;
       if (loginInfo.newGame){

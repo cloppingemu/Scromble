@@ -5,10 +5,8 @@
   <Playground :env="env" :letter_info="letter_info" />
   <GamebarPlay :env="env" :letter_info="letter_info" :warning="error_msg"
     v-if="env.game.self.name && !env.game.state.over" />
-  <GamebarOver :env="env"
-    v-if="env.game.state.over" />
   <GamebarSpectate :env="env"
-    v-if="!env.game.self.name && !env.game.state.over" />
+    v-if="!env.game.self.name || env.game.state.over" />
 </div>
 </template>
 
@@ -25,7 +23,6 @@ const allEqual = arr => arr.every( v => v === arr[0] )
 // import Header from "@/components/header.vue";
 import Playground from "@/components/playground.vue";
 import GamebarPlay from "@/components/gamebarPlay.vue";
-import GamebarOver from "@/components/gamebarOver.vue";
 import GamebarSpectate from "@/components/gamebarSpectate.vue";
 
 import {bus} from "@/main.js";
@@ -37,7 +34,6 @@ export default {
     // Header,
     Playground,
     GamebarPlay,
-    GamebarOver,
     GamebarSpectate
   },
 

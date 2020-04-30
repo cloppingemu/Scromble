@@ -35,34 +35,43 @@
       <span>Send</span>
     </v-tooltip>
   </v-card-actions>
-  <v-layout justify-center>
-    <v-card-actions>
-      <v-btn-toggle tile active-class="warning" v-model="surrender_option" @change="replacing_letters($event)" >
-        <v-btn class="font-weight-black" text
-          :disabled="this.env.game.self.name != this.env.game.state.player || currentlySendingLetters || !disabled_letters.every(v => !Boolean(v)) || Object.values(env.game.self.letters).includes('*')" >
-          Replace Tiles
-        </v-btn>
-      </v-btn-toggle>
-    </v-card-actions>
-  </v-layout>
+
   <p align="center">
-    <span style="cursor:pointer;" @click="clear_error_msg()" class="error--text pr-2" v-if="warning!=''">{{ warning }}</span>
+    <span style="cursor:pointer;" @click="clear_error_msg()" class="error--text pr-2" v-if="warning!=''"> {{warning}} </span>
     <span style="cursor:pointer;text-align:center;text-shadow: 0 0 5px green" @click="clear_error_msg()" v-if="warning!=''">&times;</span>
   </p>
-  <p align="center">
-  Scores:
-    <span v-for="player in Object.keys(env.game.state.score)" :key="player" style="list-style-type:none">
-        <span class="font-weight-black" v-if="env.game.state.player == player"><u>{{ player }}</u></span>
-        <span class="font-weight-black" v-if="env.game.state.player != player">{{ player }}</span>
-        : {{ env.game.state.score[player] }}<span v-if="player != Object.keys(env.game.state.score)[Object.keys(env.game.state.score).length-1]">, </span>
-    </span>
-  </p>
-  <p align="center">
-    <span>
-      Player: <strong>{{ env.game.self.name }}</strong>
-    </span>
-    {{ env.game.state.started ? "" : "(Allowing new players)" }}
-  </p>
+
+  <v-row>
+    <v-col>
+      <v-layout>
+        <v-spacer />
+        <v-card-actions>
+          <v-btn-toggle tile active-class="warning" v-model="surrender_option" @change="replacing_letters($event)" >
+            <v-btn class="font-weight-black" text
+              :disabled="this.env.game.self.name != this.env.game.state.player || currentlySendingLetters || !disabled_letters.every(v => !Boolean(v)) || Object.values(env.game.self.letters).includes('*')" >
+              Replace Tiles
+            </v-btn>
+          </v-btn-toggle>
+        </v-card-actions>
+      </v-layout>
+    </v-col>
+    <v-col>
+      <p align="left">
+      Scores:
+        <span v-for="player in Object.keys(env.game.state.score)" :key="player" style="list-style-type:none">
+            <span class="font-weight-black" v-if="env.game.state.player == player"><u>{{ player }}</u></span>
+            <span class="font-weight-black" v-if="env.game.state.player != player">{{ player }}</span>
+            : {{ env.game.state.score[player] }}<span v-if="player != Object.keys(env.game.state.score)[Object.keys(env.game.state.score).length-1]">, </span>
+        </span>
+      </p>
+      <p align="left">
+        <span>
+          Player: <strong>{{ env.game.self.name }}</strong>
+        </span>
+        {{ env.game.state.started ? "" : "(Allowing new players)" }}
+      </p>
+    </v-col>
+  </v-row>
 
 
   <v-overlay :value="blank_tile_overlay">

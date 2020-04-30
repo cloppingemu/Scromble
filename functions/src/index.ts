@@ -407,6 +407,14 @@ const getNewScore = ((tiles:tiles_desc, board:string) => {
     return -1;
   }
 });
+const getNextPlayer = ((players:any, turn:any) => {
+  let next : any = 0;
+  while ((next+1) <= Object.keys(players).length &&
+         !Array.from(players[Object.keys(players).sort((a:any,b:any) => {return a.joined-b.joined})[(turn+next+1) % Object.keys(players).length]].letters).map((v:any) => {return v !== "*"}).some(Boolean)){
+    next = next+1;
+  }
+  return [Object.keys(players).sort((a:any,b:any) => {return a.joined-b.joined})[(turn+next+1) % Object.keys(players).length], (turn+next+1)]
+});
 interface submitTiles_desc {
   0: {0: string, 1: string, 2: string},
   1: {
@@ -445,14 +453,9 @@ export const submitTiles = functions.https.onCall((data:submitTiles_desc) => {
                         game.state.points[board_index] = tiles[board_index][0 % tiles[board_index].length];
                       }
                       game.state.points = game.state.points.join("");
-                      game.state.turn = game.state.turn + 1;
+                      [game.state.player, game.state.turn] = getNextPlayer(game.players, game.state.turn);
                       game.state.started = (game.state.turn >= Object.keys(game.players).length);
                       game.state.lastMod = getTimeStamp();
-                      for (let player in game.players){
-                        if ((game.state.turn % Object.keys(game.players).length) === game.players[player].joined){
-                          game.state.player = player;
-                        }
-                      }
                       let new_letters = "";
                       if (Object.keys(tiles).length > game.bag.length){
                         new_letters = `${game.bag}${Array(Object.keys(tiles).length-game.bag.length).fill("*").join("")}`;
@@ -463,6 +466,9 @@ export const submitTiles = functions.https.onCall((data:submitTiles_desc) => {
                       }
                       game.players[data[0][1]].letters = replaceLetters(game.players[data[0][1]].letters, changed_letter_index, new_letters);
                       game.state.score[data[0][1]] = game.state.score[data[0][1]] + getNewScore(tiles, game.state.points);
+                      if (game.bag.length === 0 && Object.keys(game.players).map((v:any) => {return Array.from(game.players[v].letters).map((w:any) => {return w === "*"}).every(Boolean)}).every(Boolean)){
+                        game.state.over = true;
+                      }
                       db.ref(`/games/${data[0][0]}`).set(game).then(() => {
                         resolve(["success", game.players[data[0][1]].letters]);
                       }).catch(() => {
@@ -486,8 +492,8 @@ export const submitTiles = functions.https.onCall((data:submitTiles_desc) => {
           } else{
             resolve(["failure", "Invalid player"]);
           }
-        }).catch(() => {
-          resolve(["failure", "Internal read error"]);
+        }).catch((e:any) => {
+          resolve(["failure", `Internal read error. ${e}.`]);
         });
       } else{
         resolve(["failure", "Tiles not horizontal or vertical"]);
@@ -521,15 +527,16 @@ export const replaceTiles = functions.https.onCall((data:replaceTiles_desc) => {
               if (game.players[data[0][1]].key === data[0][2]){  // check player key
                 const changed_letter_index = getUniqueIndex(game.players[data[0][1]].letters, Object.values(tiles));
                 if (changed_letter_index !== -1){
-                  game.state.turn = game.state.turn + 1;
+                  // game.state.turn = game.state.turn + 1;
                   // game.state.over = false;
                   game.state.started = (game.state.turn >= Object.keys(game.players).length);
+                  [game.state.player, game.state.turn] = getNextPlayer(game.players, game.state.turn);
                   game.state.lastMod = getTimeStamp();
-                  for (let player in game.players){
-                    if ((game.state.turn % Object.keys(game.players).length) === game.players[player].joined){
-                      game.state.player = player;
-                    }
-                  }
+                  // for (let player in game.players){
+                  //   if ((game.state.turn % Object.keys(game.players).length) === game.players[player].joined){
+                  //     game.state.player = player;
+                  //   }
+                  // }
                   const send_letters = game.bag.substring(0, Object.keys(tiles).length);
                   game.bag = game.bag.substring(Object.keys(tiles).length);
                   game.players[data[0][1]].letters = replaceLetters(game.players[data[0][1]].letters, changed_letter_index, send_letters);

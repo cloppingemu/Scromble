@@ -34,8 +34,7 @@
         <v-text-field ref="playerKey" v-model="playerKey" label="Secret Key" prepend-icon="mdi-account-key" @keydown.enter="attemptSubmit" clearable />
       </v-form>
       <p align="left" style="padding:0 5%;" class="error--text">{{ warning }}</p>
-      <v-btn class="mx-auto" :loading="submitBtnLoading" @click="attemptSubmit" block> Join </v-btn>
-      <!-- <v-btn class="mt-2" block> Restart </v-btn> -->
+      <v-btn class="mx-auto" :loading="submitBtnLoading" @click="attemptSubmit" block>{{ env.game.state.over ? "Start Game" : "Join" }}</v-btn>
     </v-col>
   </v-row>
 </div>
@@ -56,7 +55,7 @@ export default {
       playerName: "",
       playerKey: "",
       submitBtnLoading: false,
-      warning: ""
+      warning: "",
     };
   },
 
@@ -82,7 +81,8 @@ export default {
                 gameName: this.$route.query.b,
                 playerName: this.playerName,
                 playerKey: this.playerKey,
-                fromLogin: false
+                fromLogin: false,
+                newGame: this.env.game.state.over
               });
             } else{
               this.warning = "No white-space allowed.";
