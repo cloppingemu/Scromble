@@ -162,7 +162,9 @@ export default {
               const blank_target = blank_tile_locations.shift();
               payload[1][blank_target] = payload[1][blank_target] + new_letter;
               this.blank_tile_overlay = false;
-              bus.$emit("fillInTheBlankTiles", [payload, blank_tile_locations])
+              this.$nextTick().then(() => {
+                bus.$emit("fillInTheBlankTiles", [payload, blank_tile_locations]);
+              });
             } else{
               this.warning_overlay = "Enter single letter.";
             }

@@ -91,8 +91,7 @@ export default {
               if (!this.$refs.playerName.value.trim().includes(" ")){
                 if (!this.$refs.playerKey.value.trim().includes(" ")){
                   this.get_board(new_game);
-                }
-                else{
+                } else{
                   this.warning = "No white-space allowed.";
                   this.$refs.playerKey.focus()
                 }

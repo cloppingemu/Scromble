@@ -325,22 +325,34 @@ interface tiles_desc {
 };
 const validateWords = ((tiles:tiles_desc, board:string) => {
   const location = Object.keys(tiles).map(v => {return parseInt(v);});
+  const base_col_word = floodFillCol(location[0], board);
+  const base_row_word = floodFillRow(location[0], board);
+  if (location.filter((v:any) => {return base_row_word.includes(v);}).length !== location.length &&
+      location.filter((v:any) => {return base_col_word.includes(v);}).length !== location.length){
+    return -1;
+  }
+  let row_words_has_new_letter = [];
+  let col_words_has_new_letter = [];
   for (let index in location){
-    const row_word = floodFillRow(location[index], board).map((v:any) => {return board[v];}).join("");
-    const col_word = floodFillCol(location[index], board).map((v:any) => {return board[v];}).join("");
+    const row_word_loc = floodFillRow(location[index], board);
+    const col_word_loc = floodFillCol(location[index], board);
+    const row_word = row_word_loc.map((v:any) => {return board[v];}).join("");
+    const col_word = col_word_loc.map((v:any) => {return board[v];}).join("");
     if ((!wordlist.includes(row_word) && row_word.length > 1) || (!wordlist.includes(col_word)) && col_word.length > 1){
-      return false;
+      return -2;
+    }
+    if (row_word.length > 1){
+      row_words_has_new_letter.push(row_word_loc.map((v:any) => {return !location.includes(v);}).some(Boolean));
+    }
+    if (col_word.length > 1){
+      col_words_has_new_letter.push(col_word_loc.map((v:any) => {return !location.includes(v);}).some(Boolean));
     }
   }
-  return true;
-});
-const validateSurrounding = ((tiles:tiles_desc, board:string) => {
-  const location = Object.keys(tiles).map(v => {return parseInt(v);});
-  const col_word = floodFillCol(location[0], board);
-  const row_word = floodFillRow(location[0], board);
-  const base_row = location.filter((v:any) => {return row_word.includes(v);}).length === location.length;
-  const base_col = location.filter((v:any) => {return col_word.includes(v);}).length === location.length;
-  return base_row || base_col;
+  if (row_words_has_new_letter.some(Boolean) || col_words_has_new_letter.some(Boolean)){
+    return 0
+  } else{
+    return -1;
+  }
 });
 const allEqual = ((arr:number[]) => {
   return arr.every((v:any) => {return v === arr[0];});
@@ -440,45 +452,43 @@ export const submitTiles = functions.https.onCall((data:submitTiles_desc) => {
               if (game.players[data[0][1]].key === data[0][2]){  // check player key
                 const changed_letter_index = getUniqueIndex(game.players[data[0][1]].letters, Object.values(tiles));
                 if (changed_letter_index !== -1){  // check if valid letters were played
-                  game.state.board = Array.from(game.state.board);
+                  let new_board : string[] = Array.from(game.state.board);
                   for (let board_index in tiles){
-                    game.state.board[board_index] = tiles[board_index][1 % tiles[board_index].length];
+                    new_board[board_index] = tiles[board_index][1 % tiles[board_index].length];
                   }
-                  const new_board = game.state.board.join("")
-                  if (validateSurrounding(tiles, new_board) || game.state.board.join("").trim().length === 0){
-                    if (validateWords(tiles, new_board)){
-                      game.state.board = new_board;
-                      game.state.points = Array.from(game.state.points);
-                      for (let board_index in tiles){
-                        game.state.points[board_index] = tiles[board_index][0 % tiles[board_index].length];
-                      }
-                      game.state.points = game.state.points.join("");
-                      [game.state.player, game.state.turn] = getNextPlayer(game.players, game.state.turn);
-                      game.state.started = (game.state.turn >= Object.keys(game.players).length);
-                      game.state.lastMod = getTimeStamp();
-                      let new_letters = "";
-                      if (Object.keys(tiles).length > game.bag.length){
-                        new_letters = `${game.bag}${Array(Object.keys(tiles).length-game.bag.length).fill("*").join("")}`;
-                        game.bag = "";
-                      } else{
-                        new_letters = game.bag.substring(0, Object.keys(tiles).length);
-                        game.bag = game.bag.substring(Object.keys(tiles).length);
-                      }
-                      game.players[data[0][1]].letters = replaceLetters(game.players[data[0][1]].letters, changed_letter_index, new_letters);
-                      game.state.score[data[0][1]] = game.state.score[data[0][1]] + getNewScore(tiles, game.state.points);
-                      if (game.bag.length === 0 && Object.keys(game.players).map((v:any) => {return Array.from(game.players[v].letters).map((w:any) => {return w === "*"}).every(Boolean)}).every(Boolean)){
-                        game.state.over = true;
-                      }
-                      db.ref(`/games/${data[0][0]}`).set(game).then(() => {
-                        resolve(["success", game.players[data[0][1]].letters]);
-                      }).catch(() => {
-                        resolve(["failure", "Internal write error"]);
-                      });
-                    } else{
-                      resolve(["failure", "Invalid word"]);
+                  const validate_words = validateWords(tiles, new_board.join(""));
+                  if (validate_words === 0 || (validate_words === -1 && game.state.board.trim().length === 0)){
+                    game.state.board = new_board.join("");
+                    game.state.points = Array.from(game.state.points);
+                    for (let board_index in tiles){
+                      game.state.points[board_index] = tiles[board_index][0 % tiles[board_index].length];
                     }
-                  } else{
+                    game.state.points = game.state.points.join("");
+                    [game.state.player, game.state.turn] = getNextPlayer(game.players, game.state.turn);
+                    game.state.started = (game.state.turn >= Object.keys(game.players).length);
+                    game.state.lastMod = getTimeStamp();
+                    let new_letters = "";
+                    if (Object.keys(tiles).length > game.bag.length){
+                      new_letters = `${game.bag}${Array(Object.keys(tiles).length-game.bag.length).fill("*").join("")}`;
+                      game.bag = "";
+                    } else{
+                      new_letters = game.bag.substring(0, Object.keys(tiles).length);
+                      game.bag = game.bag.substring(Object.keys(tiles).length);
+                    }
+                    game.players[data[0][1]].letters = replaceLetters(game.players[data[0][1]].letters, changed_letter_index, new_letters);
+                    game.state.score[data[0][1]] = game.state.score[data[0][1]] + getNewScore(tiles, game.state.points);
+                    if (game.bag.length === 0 && Object.keys(game.players).map((v:any) => {return Array.from(game.players[v].letters).map((w:any) => {return w === "*"}).every(Boolean)}).every(Boolean)){
+                      game.state.over = true;
+                    }
+                    db.ref(`/games/${data[0][0]}`).set(game).then(() => {
+                      resolve(["success", game.players[data[0][1]].letters]);
+                    }).catch(() => {
+                      resolve(["failure", "Internal write error"]);
+                    });
+                  } else if (validate_words === -1){
                     resolve(["failure", "Tiles not connected"]);
+                  } else if (validate_words == -2){
+                    resolve(["failure", "Invalid word"])
                   }
                 } else{
                   resolve(["failure", "Invalid letters"]);
@@ -493,7 +503,7 @@ export const submitTiles = functions.https.onCall((data:submitTiles_desc) => {
             resolve(["failure", "Invalid player"]);
           }
         }).catch((e:any) => {
-          resolve(["failure", `Internal read error. ${e}.`]);
+          resolve(["failure", `Internal read error`]);
         });
       } else{
         resolve(["failure", "Tiles not horizontal or vertical"]);
@@ -502,7 +512,6 @@ export const submitTiles = functions.https.onCall((data:submitTiles_desc) => {
       resolve(["failure", "Malformed request"]);
     }
   });
-
 });
 
 
