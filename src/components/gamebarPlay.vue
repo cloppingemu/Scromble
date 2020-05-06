@@ -79,7 +79,7 @@
       <v-card-text>
         <h1> Replace blank</h1>
         <v-form :validate="false">
-          <v-text-field @keydown.enter="click_on_confirm" id="wildcard" label="Wildcard" />
+          <v-text-field @keydown.enter="click_on_confirm" id="wildcard" label="New letter" />
         </v-form>
         <p class="error--text">{{ warning_overlay }}</p>
       <v-btn @click="cancelLetterDispatch" text>

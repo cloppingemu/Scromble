@@ -3,7 +3,7 @@
   <v-row>
     <v-col>
       <span class="display-2 warning--text ">Join Game</span>
-      <p align="left" style="padding:0 5%;" class="error--text">{{ env.game.state.started ? 'Not allowing new players' : '' }}</p>
+      <p align="left" style="padding:0 5%;" class="error--text">{{ env.game.state.started ? env.game.state.over ? "Current game is over" : "Not allowing new players" : "" }}</p>
       <p class="mt-2">
         Current Scores: <br />
         <v-row>
@@ -34,7 +34,7 @@
         <v-text-field ref="playerKey" v-model="playerKey" label="Secret Key" prepend-icon="mdi-account-key" @keydown.enter="attemptSubmit" clearable />
       </v-form>
       <p align="left" style="padding:0 5%;" class="error--text">{{ warning }}</p>
-      <v-btn class="mx-auto" :loading="submitBtnLoading" @click="attemptSubmit" block>{{ env.game.state.over ? "Start Game" : "Join" }}</v-btn>
+      <v-btn class="mx-auto" :loading="submitBtnLoading" @click="attemptSubmit" block>{{ env.game.state.over ? "Start Game Again" : "Join" }}</v-btn>
     </v-col>
   </v-row>
 </div>
