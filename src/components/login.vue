@@ -10,7 +10,16 @@
       <v-form>
         <v-text-field ref="gameName" v-model="gameName" label="Board Name" prepend-icon="mdi-border-all" @keydown.enter="attemptSubmit(false)" clearable />
         <v-text-field ref="playerName" v-model="playerName" label="Player Name" prepend-icon="mdi-account" @keydown.enter="attemptSubmit(false)" clearable />
-        <v-text-field ref="playerKey" v-model="playerKey" label="Secret Key" prepend-icon="mdi-account-key" @keydown.enter="attemptSubmit(false)" clearable />
+        <v-text-field ref="playerKey" v-model="playerKey" label="Secret Key" prepend-icon="mdi-account-key" @keydown.enter="attemptSubmit(false)" clearable>
+          <template v-slot:append-outer>
+            <v-tooltip bottom>
+              <template v-slot:activator="{ on }">
+                  <v-icon v-on="on">mdi-help-circle-outline</v-icon>
+              </template>
+              <span>Needed if you reconnect</span>
+            </v-tooltip>
+          </template>
+        </v-text-field>
       </v-form>
     </v-card-text>
 

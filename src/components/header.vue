@@ -1,5 +1,5 @@
 <template>
-<v-app-bar hide-on-scroll app color="primary" dark>
+<v-app-bar app color="primary" dark>
   <div class="d-flex align-center link" @click="go_to_link('/')">
     <v-icon class="shrink mr-1" x-large transition="scale-transition">mdi-border-all</v-icon>
     <h1 class="shrink mt-1 hidden-xs-only">Scromble</h1>

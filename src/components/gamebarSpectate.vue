@@ -31,10 +31,21 @@
     <v-col align="center">
       <v-form>
         <v-text-field ref="playerName" v-model="playerName" label="Player Name" prepend-icon="mdi-account" @keydown.enter="attemptSubmit" clearable />
-        <v-text-field ref="playerKey" v-model="playerKey" label="Secret Key" prepend-icon="mdi-account-key" @keydown.enter="attemptSubmit" clearable />
+        <v-text-field ref="playerKey" v-model="playerKey" label="Secret Key" prepend-icon="mdi-account-key" @keydown.enter="attemptSubmit" clearable>
+          <template v-slot:append-outer>
+            <v-tooltip bottom>
+              <template v-slot:activator="{ on }">
+                  <v-icon v-on="on">mdi-help-circle-outline</v-icon>
+              </template>
+              <span>Needed if you reconnect</span>
+            </v-tooltip>
+          </template>
+        </v-text-field>
       </v-form>
       <p align="left" style="padding:0 5%;" class="error--text">{{ warning }}</p>
-      <v-btn class="mx-auto" :loading="submitBtnLoading" @click="attemptSubmit" block>{{ env.game.state.over ? "Start Game Again" : "Join" }}</v-btn>
+      <v-btn class="mx-auto" :loading="submitBtnLoading" @click="attemptSubmit" block>
+        {{ env.game.state.over ? "Start Game Again" : "Join" }}
+      </v-btn>
     </v-col>
   </v-row>
 </div>

@@ -487,7 +487,7 @@ export const submitTiles = functions.https.onCall((data:submitTiles_desc) => {
                     });
                   } else if (validate_words === -1){
                     resolve(["failure", "Tiles not connected"]);
-                  } else if (validate_words == -2){
+                  } else if (validate_words === -2){
                     resolve(["failure", "Invalid word"])
                   }
                 } else{
